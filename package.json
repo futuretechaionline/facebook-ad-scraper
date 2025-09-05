@@ -1,17 +1,17 @@
 {
   "name": "facebook-ad-scraper",
   "version": "1.0.0",
-  "description": "Scraper for Facebook Ads",
-  "main": "src/main.js",
   "type": "module",
+  "main": "src/main.js",
   "scripts": {
     "start": "node src/main.js"
   },
   "dependencies": {
-    "apify": "^3.0.0",
-    "crawlee": "^3.7.3",
+    "node-fetch": "^3.3.2",
     "cheerio": "^1.0.0-rc.12"
-  },
+  }
+}
+,
   "author": "Qasim Shaikh",
   "license": "MIT"
 }
