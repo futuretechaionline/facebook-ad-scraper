@@ -1,15 +1,16 @@
 {
   "name": "facebook-ad-scraper",
   "version": "1.0.0",
-  "description": "Scraper for Facebook Ad Library to collect real estate leads",
+  "description": "Scraper for Facebook Ads",
   "main": "src/main.js",
+  "type": "module",
   "scripts": {
     "start": "node src/main.js"
   },
   "dependencies": {
     "apify": "^3.0.0",
-    "crawlee": "^3.7.2",
-    "playwright": "^1.47.0"
+    "crawlee": "^3.7.3",
+    "cheerio": "^1.0.0-rc.12"
   },
   "author": "Qasim Shaikh",
   "license": "MIT"
