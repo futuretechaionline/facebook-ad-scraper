@@ -58,3 +58,6 @@ fs.writeFileSync('results.json', JSON.stringify(results, null, 2));
 console.log(`✅ Wrote results.json with ${results.length} ads`);
 
 await Actor.exit();
+import fs from 'fs';
+fs.writeFileSync('results.json', JSON.stringify(results, null, 2));
+console.log("✅ results.json written with", results.length, "items");
