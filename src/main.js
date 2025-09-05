@@ -154,3 +154,11 @@ await crawler.run(requestUrls);
 log.info(`Crawler finished. Total scraped items: ${scrapedCount}`);
 
 await Actor.exit();
+
+// add at top with other imports:
+import fs from 'fs';
+
+// ... after you have `filtered` or `results` array ready:
+fs.writeFileSync('results.json', JSON.stringify(filtered || results || [], null, 2));
+console.log('WROTE results.json with', (filtered||results||[]).length, 'items');
+
