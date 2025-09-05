@@ -1,0 +1,21 @@
+{
+  "name": "facebook-ad-scraper",
+  "version": "1.0.0",
+  "description": "Scrape Facebook Ad Library using keywords and countries. Extract ad details, linked websites, and account contact info.",
+  "type": "module",
+  "main": "src/main.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "start": "node src/main.js"
+  },
+  "dependencies": {
+    "apify": "^3.4.4",
+    "cheerio": "^1.1.2",
+    "crawlee": "^3.14.1",
+    "playwright": "^1.55.0"
+  },
+  "author": "Qasim Shaikh",
+  "license": "MIT"
+}

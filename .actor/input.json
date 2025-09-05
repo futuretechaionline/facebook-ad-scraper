@@ -1,0 +1,41 @@
+{
+  "title": "Facebook Ad Scraper Input",
+  "description": "Configuration schema for scraping Facebook Ad Library.",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "keywords": {
+      "title": "Keywords",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "description": "List of keywords to search for."
+    },
+    "countries": {
+      "title": "Countries",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "description": "Country codes (ISO 3166-1 alpha-2, e.g., US, UK, CA)."
+    },
+    "max_items": {
+      "title": "Max Items",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 500,
+      "default": 100,
+      "description": "Maximum number of ads to scrape."
+    },
+    "find_contact_info": {
+      "title": "Find Contact Info",
+      "type": "boolean",
+      "default": false,
+      "description": "Extract email and social media links from account bio."
+    }
+  },
+  "required": ["keywords", "countries"]
+}
