@@ -13,6 +13,13 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
+    - name: Show environment (debug)
+      run: |
+        echo "Running on `uname -a`"
+        node -v
+        npm -v
+        ls -la
+
     - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
@@ -27,7 +34,10 @@ jobs:
         KEYWORDS: "real estate,realtor,find your dream home,schedule a tour"
         COUNTRIES: "US"
       run: |
-        node index.js
+        node src/main.js
+
+    - name: List files after run (debug)
+      run: ls -la
 
     - name: Upload scraper results
       uses: actions/upload-artifact@v3
