@@ -10,12 +10,11 @@
   "scripts": {
     "start": "node src/main.js"
   },
-  "dependencies": {
-    "apify": "^3.4.4",
-    "cheerio": "^1.1.2",
-    "crawlee": "^3.14.1",
-    "playwright": "^1.55.0"
-  },
+ "dependencies": {
+  "apify": "^3.0.0",
+  "crawlee": "^3.0.0",
+  "playwright": "^1.47.0"
+}
   "author": "Qasim Shaikh",
   "license": "MIT"
 }
