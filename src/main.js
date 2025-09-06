@@ -1,4 +1,5 @@
 import fs from 'fs';
+import fsPromises from 'fs/promises';
 import { Actor, log } from 'apify';
 import { PlaywrightCrawler } from 'crawlee';
 
@@ -52,7 +53,16 @@ try {
     fs.writeFileSync(csvFile, csv);
     log.info(`Wrote results.csv at: ${csvFile}`);
 
-    log.info('Files after writing output:', fs.readdirSync(workspacePath));
+    // Explicitly check if results.json exists and log file size
+    const exists = await fsPromises.access(jsonFile).then(() => true).catch(() => false);
+    if (exists) {
+        const stats = await fsPromises.stat(jsonFile);
+        log.info(`Confirmed results.json exists with size: ${stats.size} bytes.`);
+    } else {
+        log.warning(`results.json does NOT exist at expected path: ${jsonFile}`);
+    }
+
+    log.info('Files after writing output:', await fsPromises.readdir(workspacePath));
 
     log.info(`DONE: collected ${collected.length} leads`);
     await Actor.pushData(collected);
