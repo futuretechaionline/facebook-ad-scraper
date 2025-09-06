@@ -3,13 +3,15 @@ name: Daily Facebook Ad Scraper
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 6 * * *'
+    - cron: '0 6 * * *'   # Daily at 6 AM UTC
 
 jobs:
   run-scraper:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -17,22 +19,22 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Run scraper
         env:
           KEYWORDS: "real estate,realtor,realty,listing agent,homes,property"
-          EXCLUDE: "consultant,tax,digital,marketing,agency,group,inc,company,solutions,services,coach,creator"
           COUNTRIES: "US,UK,CA"
           MAX_ITEMS: "100"
-          MAX_FOLLOWERS: "2000"
         run: node src/main.js
 
-      - name: Confirm JSON file existence
-        run: ls -la ${{ github.workspace }}/results.json || echo "results.json not found"
+      - name: Show workspace files (debug)
+        run: ls -R ${{ github.workspace }}
 
-      - name: Upload artifact
+      - name: Upload scraper results
         uses: actions/upload-artifact@v4
         with:
           name: scraper-results
-          path: ${{ github.workspace }}/results.json
+          path: |
+            ${{ github.workspace }}/results.json
+            ${{ github.workspace }}/results.csv
