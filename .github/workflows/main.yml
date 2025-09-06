@@ -25,7 +25,7 @@ jobs:
           EXCLUDE: "consultant,tax,digital,marketing,agency,group,inc,company,solutions,services,coach,creator"
           COUNTRIES: "US,UK,CA"
           MAX_ITEMS: "100"
-          MAX_FOLLOWERS: "50000"
+          MAX_FOLLOWERS: "2000"
         run: node src/main.js
 
       - name: List files
