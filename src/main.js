@@ -38,20 +38,24 @@ try {
 
     log.info(`Collected total leads: ${collected.length}`);
 
-    // Debug listing files in current dir before writing
-    log.info('Files before writing output:', fs.readdirSync('.'));
+    // Debug: list files before writing
+    log.info('Files before writing output:', fs.readdirSync(process.cwd()));
 
-    fs.writeFileSync('results.json', JSON.stringify(collected, null, 2));
+    const jsonPath = './results.json';
+    fs.writeFileSync(jsonPath, JSON.stringify(collected, null, 2));
+    log.info(`Wrote results.json at ${process.cwd()}/${jsonPath}`);
 
+    const csvPath = './results.csv';
     const csv = "keyword,country,ad\n" + collected.map(r => {
         const adEscaped = r.ad.replace(/"/g, '""');
         return `${r.keyword},${r.country},"${adEscaped}"`;
     }).join("\n");
 
-    fs.writeFileSync('results.csv', csv);
+    fs.writeFileSync(csvPath, csv);
+    log.info(`Wrote results.csv at ${process.cwd()}/${csvPath}`);
 
-    // Confirm files exist after writing
-    log.info('Files after writing output:', fs.readdirSync('.'));
+    // Debug: list files after writing
+    log.info('Files after writing output:', fs.readdirSync(process.cwd()));
 
     log.info(`DONE: collected ${collected.length} leads`);
     await Actor.pushData(collected);
