@@ -32,9 +32,9 @@ jobs:
         run: ls -la
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: scraper-results
-          path: |
-            results.json
-            results.csv
+  uses: actions/upload-artifact@v4
+  with:
+    name: scraper-results
+    path: |
+      results.json
+      results.csv
