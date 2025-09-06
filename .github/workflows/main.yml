@@ -28,13 +28,13 @@ jobs:
           MAX_ITEMS: "100"
         run: node src/main.js
 
-      - name: Show workspace files (debug)
-        run: ls -R ${{ github.workspace }}
+      - name: Debug: list files in /src
+        run: ls -R ${{ github.workspace }}/src
 
       - name: Upload scraper results
         uses: actions/upload-artifact@v4
         with:
           name: scraper-results
           path: |
-            ${{ github.workspace }}/results.json
-            ${{ github.workspace }}/results.csv
+            ${{ github.workspace }}/src/results.json
+            ${{ github.workspace }}/src/results.csv
