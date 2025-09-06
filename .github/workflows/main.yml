@@ -28,13 +28,11 @@ jobs:
           MAX_FOLLOWERS: "2000"
         run: node src/main.js
 
-      - name: List files in workspace before upload
-        run: ls -la results.json results.csv || echo "Output files not found"
+      - name: Confirm JSON file existence
+        run: ls -la ${{ github.workspace }}/results.json || echo "results.json not found"
 
-      - name: Upload artifacts
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: scraper-results
-          path: |
-            results.json
-            results.csv
+          path: ${{ github.workspace }}/results.json
