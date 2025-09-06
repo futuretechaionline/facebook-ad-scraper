@@ -1,38 +1,40 @@
 name: Daily Facebook Ad Scraper
 
 on:
-  schedule:
-    - cron: '0 6 * * *'   # Daily at 6 AM UTC
   workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * *'
 
 jobs:
   run-scraper:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-    - name: Install dependencies
-      run: npm install
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Run scraper
-      env:
-        MAX_ITEMS: 200
-        KEYWORDS: "real estate,realtor,find your dream home,schedule a tour"
-        COUNTRIES: "US"
-      run: |
-        node src/main.js
+      - name: Run scraper
+        env:
+          KEYWORDS: "real estate,realtor,realty,listing agent,homes,property"
+          EXCLUDE: "consultant,tax,digital,marketing,agency,group,inc,company,solutions,services,coach,creator"
+          COUNTRIES: "US,UK,CA"
+          MAX_ITEMS: "100"
+          MAX_FOLLOWERS: "50000"
+        run: node src/main.js
 
-    - name: Upload scraper results
-      uses: actions/upload-artifact@v4
-      with:
-        name: scraper-results
-        path: |
-          results.json
-          results.csv
+      - name: List files
+        run: ls -la
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: scraper-results
+          path: |
+            results.json
+            results.csv
