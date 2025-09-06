@@ -38,24 +38,21 @@ try {
 
     log.info(`Collected total leads: ${collected.length}`);
 
-    // Debug: list files before writing
-    log.info('Files before writing output:', fs.readdirSync(process.cwd()));
+    const workspacePath = process.env.GITHUB_WORKSPACE || process.cwd();
 
-    const jsonPath = './results.json';
-    fs.writeFileSync(jsonPath, JSON.stringify(collected, null, 2));
-    log.info(`Wrote results.json at ${process.cwd()}/${jsonPath}`);
+    const jsonFile = `${workspacePath}/results.json`;
+    fs.writeFileSync(jsonFile, JSON.stringify(collected, null, 2));
+    log.info(`Wrote results.json at: ${jsonFile}`);
 
-    const csvPath = './results.csv';
+    const csvFile = `${workspacePath}/results.csv`;
     const csv = "keyword,country,ad\n" + collected.map(r => {
         const adEscaped = r.ad.replace(/"/g, '""');
         return `${r.keyword},${r.country},"${adEscaped}"`;
     }).join("\n");
+    fs.writeFileSync(csvFile, csv);
+    log.info(`Wrote results.csv at: ${csvFile}`);
 
-    fs.writeFileSync(csvPath, csv);
-    log.info(`Wrote results.csv at ${process.cwd()}/${csvPath}`);
-
-    // Debug: list files after writing
-    log.info('Files after writing output:', fs.readdirSync(process.cwd()));
+    log.info('Files after writing output:', fs.readdirSync(workspacePath));
 
     log.info(`DONE: collected ${collected.length} leads`);
     await Actor.pushData(collected);
