@@ -1,66 +1,57 @@
-import fs from "fs";
-import fetch from "node-fetch";
-import * as cheerio from "cheerio";
+import fs from 'fs';
+import { Actor, log } from 'apify';
+import { PlaywrightCrawler } from 'crawlee';
 
-async function scrape() {
-  const keywords = process.env.KEYWORDS?.split(",") || ["real estate"];
-  const country = process.env.COUNTRIES || "US";
-  const maxItems = parseInt(process.env.MAX_ITEMS || "50", 10);
+await Actor.init();
 
-  let results = [];
+try {
+  const input = (await Actor.getInput()) || {};
+  const KEYWORDS = (input.keywords || process.env.KEYWORDS || "real estate,realtor").split(',').map(s => s.trim());
+  const COUNTRIES = (input.countries || process.env.COUNTRIES || "US").split(',').map(s => s.trim());
+  const MAX_ITEMS = parseInt(input.max_items || process.env.MAX_ITEMS || "100", 10);
 
-  for (const keyword of keywords) {
-    console.log(`🔍 Searching for keyword: ${keyword}`);
-    const url = `https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=${country}&q=${encodeURIComponent(
-      keyword
-    )}`;
+  let collected = [];
 
-    const res = await fetch(url);
-    const html = await res.text();
-    const $ = cheerio.load(html);
+  const crawler = new PlaywrightCrawler({
+    async requestHandler({ page, request }) {
+      log.info(`Visiting ${request.url}`);
+      await page.waitForTimeout(2000);
+      const ads = await page.$$eval('div[role="article"]', els => els.map(e => e.innerText));
+      for (let ad of ads) {
+        if (collected.length >= MAX_ITEMS) break;
+        collected.push({ keyword: request.userData.keyword, country: request.userData.country, ad });
+      }
+    },
+  });
 
-    // Try main selector first
-    let ads = $("[data-ad-preview]");
-    if (!ads.length) {
-      console.log("⚠️ [data-ad-preview] not found → using fallback");
-      ads = $("div").filter((i, el) => $(el).text().includes("Sponsored"));
-    }
-
-    ads.each((i, el) => {
-      if (results.length >= maxItems) return false;
-
-      const adText = $(el).text().trim().slice(0, 500); // first 500 chars
-      const pageLink = $(el).find("a").attr("href") || "";
-      const advertiser = $(el).find("strong").first().text().trim() || "Unknown";
-
-      results.push({
-        keyword,
-        advertiser,
-        adText,
-        pageLink,
-        timestamp: new Date().toISOString(),
+  const startRequests = [];
+  for (const country of COUNTRIES) {
+    for (const keyword of KEYWORDS) {
+      startRequests.push({
+        url: `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${country}&q=${encodeURIComponent(keyword)}&is_targeted_country=false`,
+        userData: { keyword, country },
       });
-    });
+    }
   }
 
-  console.log(`✅ Scraped ${results.length} ads`);
-  fs.writeFileSync("results.json", JSON.stringify(results, null, 2));
+  await crawler.run(startRequests);
 
-  // Write CSV too
-  const csvHeader = "Keyword,Advertiser,AdText,PageLink,Timestamp\n";
-  const csvRows = results
-    .map(
-      (r) =>
-        `"${r.keyword}","${r.advertiser}","${r.adText.replace(/"/g, "'")}","${
-          r.pageLink
-        }","${r.timestamp}"`
-    )
-    .join("\n");
+  fs.writeFileSync('results.json', JSON.stringify(collected, null, 2));
 
-  fs.writeFileSync("results.csv", csvHeader + csvRows);
+  // CSV escaping double quotes properly
+  const csv = "keyword,country,ad\n" + collected.map(r => {
+    const adEscaped = r.ad.replace(/"/g, '""'); // double quotes doubled for CSV escape
+    return `${r.keyword},${r.country},"${adEscaped}"`;
+  }).join("\n");
+
+  fs.writeFileSync('results.csv', csv);
+
+  log.info(`DONE: collected ${collected.length} leads`);
+  await Actor.pushData(collected);
+
+} catch (err) {
+  log.error('Fatal error', { err });
+  process.exitCode = 1;
 }
 
-scrape().catch((err) => {
-  console.error("❌ Scraper error:", err);
-  process.exit(1);
-});
+await Actor.exit();
