@@ -43,10 +43,12 @@ try {
 
     log.info(`Collected total leads: ${collected.length}`);
 
-    // Always save into GitHub workspace root
+    // Always save into /src so GitHub Actions can upload
     const workspacePath = process.env.GITHUB_WORKSPACE || process.cwd();
-    const jsonFile = `${workspacePath}/results.json`;
-    const csvFile = `${workspacePath}/results.csv`;
+    const outputDir = `${workspacePath}/src`;
+
+    const jsonFile = `${outputDir}/results.json`;
+    const csvFile = `${outputDir}/results.csv`;
 
     // Write JSON
     fs.writeFileSync(jsonFile, JSON.stringify(collected, null, 2));
@@ -69,7 +71,7 @@ try {
         log.warning(`❌ results.json missing at: ${jsonFile}`);
     }
 
-    log.info("📂 Files in workspace:", await fsPromises.readdir(workspacePath));
+    log.info("📂 Files in /src:", await fsPromises.readdir(outputDir));
     await Actor.pushData(collected);
 
 } catch (err) {
