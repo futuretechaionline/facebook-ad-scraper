@@ -3,33 +3,67 @@ name: Daily Facebook Ad Scraper
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 6 * * *'   # Daily at 6 AM UTC
+    - cron: '0 6 * * *'   # Daily at 06:00 UTC
 
 jobs:
   run-scraper:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '20'
+
+      - name: Print environment (debug)
+        run: |
+          echo "GITHUB_WORKSPACE = $GITHUB_WORKSPACE"
+          echo "PWD = $(pwd)"
+          node -v
+          npm -v
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          if [ -f package-lock.json ]; then
+            echo "Using npm ci (package-lock.json found)"
+            npm ci
+          else
+            echo "Using npm install (no package-lock.json)"
+            npm install
+          fi
+
+      - name: Ensure output dir exists
+        run: |
+          mkdir -p "${{ github.workspace }}/src"
+          echo "Created/checked: ${{ github.workspace }}/src"
 
       - name: Run scraper
         env:
           KEYWORDS: "real estate,realtor,realty,listing agent,homes,property"
           COUNTRIES: "US,UK,CA"
           MAX_ITEMS: "100"
-        run: node src/main.js
+        run: |
+          echo "Running scraper from: $(pwd)"
+          node src/main.js
 
-      - name: Debug: list files in /src
-        run: ls -R ${{ github.workspace }}/src
+      - name: Debug: list repo root (quick)
+        run: ls -la "${{ github.workspace }}" || true
+
+      - name: Debug: list files in /src (where results should be)
+        run: ls -la "${{ github.workspace }}/src" || true
+
+      - name: Show head of results.json (if exists)
+        run: |
+          if [ -f "${{ github.workspace }}/src/results.json" ]; then
+            echo "=== results.json (first 2000 bytes) ==="
+            head -c 2000 "${{ github.workspace }}/src/results.json" || true
+            echo
+          else
+            echo "results.json not present in src/"
+          fi
 
       - name: Upload scraper results
         uses: actions/upload-artifact@v4
