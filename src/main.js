@@ -4,15 +4,12 @@ import { Actor, log } from 'apify';
 import { PlaywrightCrawler } from 'crawlee';
 
 await Actor.init();
-
 try {
     const input = (await Actor.getInput()) || {};
     const KEYWORDS = (input.keywords || process.env.KEYWORDS || "real estate,realtor").split(',').map(s => s.trim());
     const COUNTRIES = (input.countries || process.env.COUNTRIES || "US").split(',').map(s => s.trim());
     const MAX_ITEMS = parseInt(input.max_items || process.env.MAX_ITEMS || "100", 10);
-
     let collected = [];
-
     const crawler = new PlaywrightCrawler({
         async requestHandler({ page, request }) {
             log.info(`Visiting ${request.url}`);
@@ -28,7 +25,6 @@ try {
             }
         },
     });
-
     const startRequests = [];
     for (const country of COUNTRIES) {
         for (const keyword of KEYWORDS) {
@@ -38,17 +34,13 @@ try {
             });
         }
     }
-
     await crawler.run(startRequests);
-
     log.info(`Collected total leads: ${collected.length}`);
 
-    // Always save into /src so GitHub Actions can upload
+    // Always save to project root
     const workspacePath = process.env.GITHUB_WORKSPACE || process.cwd();
-    const outputDir = `${workspacePath}/src`;
-
-    const jsonFile = `${outputDir}/results.json`;
-    const csvFile = `${outputDir}/results.csv`;
+    const jsonFile = `${workspacePath}/results.json`;
+    const csvFile = `${workspacePath}/results.csv`;
 
     // Write JSON
     fs.writeFileSync(jsonFile, JSON.stringify(collected, null, 2));
@@ -70,13 +62,11 @@ try {
     } else {
         log.warning(`❌ results.json missing at: ${jsonFile}`);
     }
-
-    log.info("📂 Files in /src:", await fsPromises.readdir(outputDir));
+    log.info("Files in project root:", await fsPromises.readdir(workspacePath));
     await Actor.pushData(collected);
 
 } catch (err) {
     log.error("Fatal error", { err });
     process.exitCode = 1;
 }
-
 await Actor.exit();
