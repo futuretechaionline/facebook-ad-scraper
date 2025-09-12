@@ -1,74 +1,71 @@
-name: Daily Facebook Ad Scraper
+  - name: Setup Node.js
+    uses: actions/setup-node@v4
+    with:
+      node-version: '20'
 
-on:
-  workflow_dispatch:
-  schedule:
-    - cron: '0 6 * * *'   # Daily at 06:00 UTC
+  - name: Print environment (debug)
+    run: |
+      echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
+      echo "PWD=$(pwd)"
+      node -v
+      npm -v
+      ls -la
 
-jobs:
-  run-scraper:
-    runs-on: ubuntu-latest
+  - name: Install dependencies
+    run: |
+      if [ -f package-lock.json ]; then
+        echo "Using npm ci (package-lock.json found)"
+        npm ci
+      else
+        echo "Using npm install (no package-lock.json)"
+        npm install
+      fi
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+  - name: Ensure src dir exists (or create)
+    run: |
+      mkdir -p "${{ github.workspace }}/src"
+      echo "Checked/created: ${{ github.workspace }}/src"
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+  - name: Sanity check entry file
+    run: |
+      if [ ! -f "src/main.js" ]; then
+        echo "ERROR: src/main.js not found. Listing tree for diagnostics..."
+        ls -la
+        ls -la src || true
+        exit 1
+      fi
+      echo "Found src/main.js"
 
-      - name: Print environment (debug)
-        run: |
-          echo "GITHUB_WORKSPACE = $GITHUB_WORKSPACE"
-          echo "PWD = $(pwd)"
-          node -v
-          npm -v
+  - name: Run scraper
+    env:
+      KEYWORDS: "real estate,realtor,realty,listing agent,homes,property"
+      COUNTRIES: "US,UK,CA"
+      MAX_ITEMS: "100"
+    run: |
+      echo "Running scraper from: $(pwd)"
+      node src/main.js
 
-      - name: Install dependencies
-        run: |
-          if [ -f package-lock.json ]; then
-            echo "Using npm ci (package-lock.json found)"
-            npm ci
-          else
-            echo "Using npm install (no package-lock.json)"
-            npm install
-          fi
+  - name: Debug: list repo root
+    run: ls -la "${{ github.workspace }}" || true
 
-      - name: Ensure output dir exists
-        run: |
-          mkdir -p "${{ github.workspace }}/src"
-          echo "Created/checked: ${{ github.workspace }}/src"
+  - name: Debug: list files in /src
+    run: ls -la "${{ github.workspace }}/src" || true
 
-      - name: Run scraper
-        env:
-          KEYWORDS: "real estate,realtor,realty,listing agent,homes,property"
-          COUNTRIES: "US,UK,CA"
-          MAX_ITEMS: "100"
-        run: |
-          echo "Running scraper from: $(pwd)"
-          node src/main.js
+  - name: Show head of results.json (if exists)
+    run: |
+      if [ -f "${{ github.workspace }}/src/results.json" ]; then
+        echo "=== results.json (first 2000 bytes) ==="
+        head -c 2000 "${{ github.workspace }}/src/results.json" || true
+        echo
+      else
+        echo "results.json not present in src/"
+      fi
 
-      - name: Debug: list repo root (quick)
-        run: ls -la "${{ github.workspace }}" || true
-
-      - name: Debug: list files in /src (where results should be)
-        run: ls -la "${{ github.workspace }}/src" || true
-
-      - name: Show head of results.json (if exists)
-        run: |
-          if [ -f "${{ github.workspace }}/src/results.json" ]; then
-            echo "=== results.json (first 2000 bytes) ==="
-            head -c 2000 "${{ github.workspace }}/src/results.json" || true
-            echo
-          else
-            echo "results.json not present in src/"
-          fi
-
-      - name: Upload scraper results
-        uses: actions/upload-artifact@v4
-        with:
-          name: scraper-results
-          path: |
-            ${{ github.workspace }}/src/results.json
-            ${{ github.workspace }}/src/results.csv
+  - name: Upload scraper results
+    uses: actions/upload-artifact@v4
+    with:
+      name: scraper-results
+      path: |
+        ${{ github.workspace }}/src/results.json
+        ${{ github.workspace }}/src/results.csv
+      if-no-files-found: ignore
