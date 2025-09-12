@@ -37,16 +37,16 @@ try {
     await crawler.run(startRequests);
     log.info(`Collected total leads: ${collected.length}`);
 
-    // Always save to project root
+    // Always save to project root!
     const workspacePath = process.env.GITHUB_WORKSPACE || process.cwd();
     const jsonFile = `${workspacePath}/results.json`;
     const csvFile = `${workspacePath}/results.csv`;
 
-    // Write JSON
+    // Write JSON to root
     fs.writeFileSync(jsonFile, JSON.stringify(collected, null, 2));
     log.info(`✅ Wrote results.json at: ${jsonFile}`);
 
-    // Write CSV
+    // Write CSV to root
     const csv = "keyword,country,ad\n" + collected.map(r => {
         const adEscaped = r.ad.replace(/"/g, '""');
         return `${r.keyword},${r.country},"${adEscaped}"`;
@@ -62,7 +62,7 @@ try {
     } else {
         log.warning(`❌ results.json missing at: ${jsonFile}`);
     }
-    log.info("Files in project root:", await fsPromises.readdir(workspacePath));
+    log.info("Files in repo root:", await fsPromises.readdir(workspacePath));
     await Actor.pushData(collected);
 
 } catch (err) {
