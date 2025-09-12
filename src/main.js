@@ -1,4 +1,6 @@
 import fs from 'fs';
+fs.writeFileSync('results.json', JSON.stringify([{ status: "script started" }], null, 2));
+import fs from 'fs';
 import fsPromises from 'fs/promises';
 import { Actor, log } from 'apify';
 import { PlaywrightCrawler } from 'crawlee';
