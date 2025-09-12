@@ -1,7 +1,7 @@
   - name: Setup Node.js
     uses: actions/setup-node@v4
     with:
-      node-version: '20'
+      node-version: '20'  # Node 20 LTS[4][5]
 
   - name: Print environment (debug)
     run: |
@@ -9,7 +9,7 @@
       echo "PWD=$(pwd)"
       node -v
       npm -v
-      ls -la
+      ls -la  # list repo root[6][3]
 
   - name: Install dependencies
     run: |
@@ -19,12 +19,12 @@
       else
         echo "Using npm install (no package-lock.json)"
         npm install
-      fi
+      fi  # standard Node install pattern[7][4]
 
   - name: Ensure src dir exists (or create)
     run: |
       mkdir -p "${{ github.workspace }}/src"
-      echo "Checked/created: ${{ github.workspace }}/src"
+      echo "Checked/created: ${{ github.workspace }}/src"  # avoids path errors[3]
 
   - name: Sanity check entry file
     run: |
@@ -34,7 +34,7 @@
         ls -la src || true
         exit 1
       fi
-      echo "Found src/main.js"
+      echo "Found src/main.js"  # fail fast with context[6][3]
 
   - name: Run scraper
     env:
@@ -43,13 +43,13 @@
       MAX_ITEMS: "100"
     run: |
       echo "Running scraper from: $(pwd)"
-      node src/main.js
+      node src/main.js  # execute entry[3]
 
   - name: Debug: list repo root
-    run: ls -la "${{ github.workspace }}" || true
+    run: ls -la "${{ github.workspace }}" || true  # post-run check [3]
 
   - name: Debug: list files in /src
-    run: ls -la "${{ github.workspace }}/src" || true
+    run: ls -la "${{ github.workspace }}/src" || true  # expect results here [3]
 
   - name: Show head of results.json (if exists)
     run: |
@@ -59,7 +59,7 @@
         echo
       else
         echo "results.json not present in src/"
-      fi
+      fi  # easy preview in logs[3]
 
   - name: Upload scraper results
     uses: actions/upload-artifact@v4
@@ -68,5 +68,4 @@
       path: |
         ${{ github.workspace }}/src/results.json
         ${{ github.workspace }}/src/results.csv
-      if-no-files-found: ignore
-d
+      if-no-files-found: ignore  # prevent hard fail if outputs absent[8][9]
