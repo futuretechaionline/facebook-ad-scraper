@@ -1,7 +1,22 @@
+name: Daily Facebook Ad Scraper
+on:
+workflow_dispatch:
+schedule:
+- cron: '0 6 * * *' # Daily at 06:00 UTC
+jobs:
+run-scraper:
+runs-on: ubuntu-latest # GitHub-hosted runner
+permissions:
+contents: read # minimal perms
+steps:
+- name: Checkout repository
+uses: actions/checkout@v4 # fetch repo files
+
+text
   - name: Setup Node.js
     uses: actions/setup-node@v4
     with:
-      node-version: '20'  # Node 20 LTS[4][5]
+      node-version: '20'  # Node 20 LTS[6][7]
 
   - name: Print environment (debug)
     run: |
@@ -9,7 +24,7 @@
       echo "PWD=$(pwd)"
       node -v
       npm -v
-      ls -la  # list repo root[6][3]
+      ls -la  # list repo root[8][5]
 
   - name: Install dependencies
     run: |
@@ -19,12 +34,12 @@
       else
         echo "Using npm install (no package-lock.json)"
         npm install
-      fi  # standard Node install pattern[7][4]
+      fi  # standard Node docs pattern[7][9]
 
   - name: Ensure src dir exists (or create)
     run: |
       mkdir -p "${{ github.workspace }}/src"
-      echo "Checked/created: ${{ github.workspace }}/src"  # avoids path errors[3]
+      echo "Checked/created: ${{ github.workspace }}/src"  # avoid path errors[5]
 
   - name: Sanity check entry file
     run: |
@@ -32,9 +47,10 @@
         echo "ERROR: src/main.js not found. Listing tree for diagnostics..."
         ls -la
         ls -la src || true
+        echo "If your entry is elsewhere, update the node command path below."
         exit 1
       fi
-      echo "Found src/main.js"  # fail fast with context[6][3]
+      echo "Found src/main.js"  # fail fast with context[8][5]
 
   - name: Run scraper
     env:
@@ -43,13 +59,13 @@
       MAX_ITEMS: "100"
     run: |
       echo "Running scraper from: $(pwd)"
-      node src/main.js  # execute entry[3]
+      node src/main.js  # run your scraper[5]
 
   - name: Debug: list repo root
-    run: ls -la "${{ github.workspace }}" || true  # post-run check [3]
+    run: ls -la "${{ github.workspace }}" || true  # post-run context [5]
 
   - name: Debug: list files in /src
-    run: ls -la "${{ github.workspace }}/src" || true  # expect results here [3]
+    run: ls -la "${{ github.workspace }}/src" || true  # expect outputs here [5]
 
   - name: Show head of results.json (if exists)
     run: |
@@ -59,7 +75,7 @@
         echo
       else
         echo "results.json not present in src/"
-      fi  # easy preview in logs[3]
+      fi  # quick visibility in logs[5]
 
   - name: Upload scraper results
     uses: actions/upload-artifact@v4
@@ -68,4 +84,4 @@
       path: |
         ${{ github.workspace }}/src/results.json
         ${{ github.workspace }}/src/results.csv
-      if-no-files-found: ignore  # prevent hard fail if outputs absent[8][9]
+      if-no-files-found: ignore  # do not fail if one/both missing[10][11][12]
