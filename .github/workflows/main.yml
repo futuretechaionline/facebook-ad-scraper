@@ -1,87 +1,88 @@
 name: Daily Facebook Ad Scraper
+
 on:
-workflow_dispatch:
-schedule:
-- cron: '0 6 * * *' # Daily at 06:00 UTC
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * *'  # Daily at 06:00 UTC
+
 jobs:
-run-scraper:
-runs-on: ubuntu-latest # GitHub-hosted runner
-permissions:
-contents: read # minimal perms
-steps:
-- name: Checkout repository
-uses: actions/checkout@v4 # fetch repo files
+  run-scraper:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-text
-  - name: Setup Node.js
-    uses: actions/setup-node@v4
-    with:
-      node-version: '20'  # Node 20 LTS[6][7]
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
-  - name: Print environment (debug)
-    run: |
-      echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
-      echo "PWD=$(pwd)"
-      node -v
-      npm -v
-      ls -la  # list repo root[8][5]
+      - name: Print environment (debug)
+        run: |
+          echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
+          echo "PWD=$(pwd)"
+          node -v
+          npm -v
+          ls -la
 
-  - name: Install dependencies
-    run: |
-      if [ -f package-lock.json ]; then
-        echo "Using npm ci (package-lock.json found)"
-        npm ci
-      else
-        echo "Using npm install (no package-lock.json)"
-        npm install
-      fi  # standard Node docs pattern[7][9]
+      - name: Install dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            echo "Using npm ci (package-lock.json found)"
+            npm ci
+          else
+            echo "Using npm install (no package-lock.json)"
+            npm install
+          fi
 
-  - name: Ensure src dir exists (or create)
-    run: |
-      mkdir -p "${{ github.workspace }}/src"
-      echo "Checked/created: ${{ github.workspace }}/src"  # avoid path errors[5]
+      - name: Ensure src dir exists (or create)
+        run: |
+          mkdir -p "${{ github.workspace }}/src"
+          echo "Checked/created: ${{ github.workspace }}/src"
 
-  - name: Sanity check entry file
-    run: |
-      if [ ! -f "src/main.js" ]; then
-        echo "ERROR: src/main.js not found. Listing tree for diagnostics..."
-        ls -la
-        ls -la src || true
-        echo "If your entry is elsewhere, update the node command path below."
-        exit 1
-      fi
-      echo "Found src/main.js"  # fail fast with context[8][5]
+      - name: Sanity check entry file
+        run: |
+          if [ ! -f "src/main.js" ]; then
+            echo "ERROR: src/main.js not found. Listing tree for diagnostics..."
+            ls -la
+            ls -la src || true
+            echo "If your entry is elsewhere, update the node command path below."
+            exit 1
+          fi
+          echo "Found src/main.js"
 
-  - name: Run scraper
-    env:
-      KEYWORDS: "real estate,realtor,realty,listing agent,homes,property"
-      COUNTRIES: "US,UK,CA"
-      MAX_ITEMS: "100"
-    run: |
-      echo "Running scraper from: $(pwd)"
-      node src/main.js  # run your scraper[5]
+      - name: Run scraper
+        env:
+          KEYWORDS: "real estate,realtor,realty,listing agent,homes,property"
+          COUNTRIES: "US,UK,CA"
+          MAX_ITEMS: "100"
+        run: |
+          echo "Running scraper from: $(pwd)"
+          node src/main.js
 
-  - name: Debug: list repo root
-    run: ls -la "${{ github.workspace }}" || true  # post-run context [5]
+      - name: Debug: list repo root
+        run: ls -la "${{ github.workspace }}" || true
 
-  - name: Debug: list files in /src
-    run: ls -la "${{ github.workspace }}/src" || true  # expect outputs here [5]
+      - name: Debug: list files in /src
+        run: ls -la "${{ github.workspace }}/src" || true
 
-  - name: Show head of results.json (if exists)
-    run: |
-      if [ -f "${{ github.workspace }}/src/results.json" ]; then
-        echo "=== results.json (first 2000 bytes) ==="
-        head -c 2000 "${{ github.workspace }}/src/results.json" || true
-        echo
-      else
-        echo "results.json not present in src/"
-      fi  # quick visibility in logs[5]
+      - name: Show head of results.json (if exists)
+        run: |
+          if [ -f "${{ github.workspace }}/src/results.json" ]; then
+            echo "=== results.json (first 2000 bytes) ==="
+            head -c 2000 "${{ github.workspace }}/src/results.json" || true
+            echo
+          else
+            echo "results.json not present in src/"
+          fi
 
-  - name: Upload scraper results
-    uses: actions/upload-artifact@v4
-    with:
-      name: scraper-results
-      path: |
-        ${{ github.workspace }}/src/results.json
-        ${{ github.workspace }}/src/results.csv
-      if-no-files-found: ignore  # do not fail if one/both missing[10][11][12]
+      - name: Upload scraper results
+        uses: actions/upload-artifact@v4
+        with:
+          name: scraper-results
+          path: |
+            ${{ github.workspace }}/src/results.json
+            ${{ github.workspace }}/src/results.csv
+          if-no-files-found: ignore
