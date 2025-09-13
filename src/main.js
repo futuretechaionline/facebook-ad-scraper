@@ -5,6 +5,8 @@ import { PlaywrightCrawler } from 'crawlee';
 
 await Actor.init();
 
+const proxyUrl = 'socks4://1.130.3.138:1080'; // Your free SOCKS4 proxy
+
 try {
     const input = (await Actor.getInput()) || {};
 
@@ -12,18 +14,44 @@ try {
     const COUNTRIES = input.countries || [];
     const MAX_ITEMS = input.maxItems || 100;
     const OUTPUT_FORMAT = (input.outputFormat || 'json').toLowerCase();
+    const FIND_CONTACT_INFO = input.findContactInfo || false;
 
     let collected = [];
 
     const crawler = new PlaywrightCrawler({
+        proxyConfiguration: {
+            proxyUrls: [proxyUrl],
+        },
+        launchContext: {
+            launchOptions: {
+                headless: true,
+                args: [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-accelerated-2d-canvas',
+                    '--disable-gpu',
+                    '--window-size=1200,800',
+                ],
+            },
+        },
         async requestHandler({ page, request }) {
             log.info(`Visiting ${request.url}`);
 
+            // Accept cookies popup if present
+            try {
+                const cookieButton = await page.$('button:has-text("Allow all cookies")');
+                if (cookieButton) {
+                    await cookieButton.click();
+                    log.info('Clicked cookie acceptance button');
+                }
+            } catch {}
+
             // Scroll the page to load more ads
             await page.evaluate(async () => {
-                for (let i = 0; i < 5; i++) {
+                for (let i = 0; i < 10; i++) {
                     window.scrollBy(0, window.innerHeight);
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    await new Promise(resolve => setTimeout(resolve, 1500));
                 }
             });
 
@@ -60,7 +88,6 @@ try {
     const csvFile = `${workspacePath}/results.csv`;
 
     if (OUTPUT_FORMAT === 'csv') {
-        // Create CSV header
         const header = "keyword,country,ad\n";
         const csvRows = collected.map(r => {
             const cleanAd = r.ad.replace(/"/g, '""');
@@ -70,7 +97,6 @@ try {
         fs.writeFileSync(csvFile, csv);
         log.info(`✅ Wrote results.csv at: ${csvFile}`);
     } else {
-        // Write JSON output
         fs.writeFileSync(jsonFile, JSON.stringify(collected, null, 2));
         log.info(`✅ Wrote results.json at: ${jsonFile}`);
     }
